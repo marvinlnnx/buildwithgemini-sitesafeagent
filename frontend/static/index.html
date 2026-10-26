@@ -33,18 +33,27 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    -webkit-font-smoothing: antialiased;
   }
+  
+  /* Header & Navigation */
   header {
     background: var(--dark);
     color: #fff;
-    padding: 0.9rem 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    padding: 0.85rem 1.5rem;
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
     position: sticky;
     top: 0;
     z-index: 50;
+  }
+  .header-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
   }
   .brand {
     display: flex;
@@ -53,6 +62,7 @@
     font-size: 1.25rem;
     font-weight: 800;
     letter-spacing: -0.02em;
+    flex-shrink: 0;
   }
   .brand-icon {
     background: var(--primary);
@@ -73,7 +83,7 @@
   }
   .nav-tabs {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.4rem;
     background: rgba(255,255,255,0.08);
     padding: 0.25rem;
     border-radius: 10px;
@@ -82,15 +92,18 @@
     background: transparent;
     border: none;
     color: #94a3b8;
-    padding: 0.45rem 0.9rem;
+    padding: 0.5rem 0.9rem;
     border-radius: 7px;
     font-weight: 600;
     font-size: 0.88rem;
     cursor: pointer;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.4rem;
     transition: all 0.15s ease;
+    white-space: nowrap;
+    touch-action: manipulation;
   }
   .nav-btn.active {
     background: var(--primary);
@@ -100,18 +113,21 @@
     color: #fff;
     background: rgba(255,255,255,0.06);
   }
+  .tab-label-short { display: none; }
+  .tab-label-full { display: inline; }
 
+  /* Main Container */
   main {
     flex: 1;
     max-width: 1080px;
     width: 100%;
     margin: 0 auto;
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 1rem;
   }
   .view-panel { display: none; }
   .view-panel.active { display: block; }
 
-  /* Utility Cards */
+  /* Cards & Utility */
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -120,11 +136,24 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     margin-bottom: 1.25rem;
   }
+  .disclaimer {
+    background: var(--warning-bg);
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.8rem;
+    color: #92400e;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    line-height: 1.4;
+  }
 
   /* PHOTO INSPECTOR MODE */
   .samples-bar {
     display: flex;
-    gap: 0.6rem;
+    gap: 0.5rem;
     margin-bottom: 1rem;
     flex-wrap: wrap;
     align-items: center;
@@ -137,10 +166,11 @@
     font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 0.4rem;
     transition: all 0.15s;
+    touch-action: manipulation;
   }
   .sample-chip:hover {
     border-color: var(--primary);
@@ -155,9 +185,12 @@
     text-align: center;
     background: #fdfdfe;
     cursor: pointer;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, background 0.2s;
   }
-  .dropzone:hover { border-color: var(--primary); }
+  .dropzone:hover {
+    border-color: var(--primary);
+    background: var(--primary-bg);
+  }
   .dropzone input { display: none; }
 
   .preview-area {
@@ -166,15 +199,23 @@
     align-items: center;
     margin-top: 1rem;
     background: #f1f5f9;
-    padding: 0.75rem;
+    padding: 0.85rem;
     border-radius: 10px;
   }
+  .preview-thumb-row {
+    display: flex;
+    gap: 0.85rem;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+  }
   .preview-img {
-    width: 110px;
-    height: 80px;
+    width: 100px;
+    height: 75px;
     object-fit: cover;
     border-radius: 8px;
     border: 1px solid var(--border);
+    flex-shrink: 0;
   }
 
   .action-btn {
@@ -182,17 +223,21 @@
     color: #fff;
     border: none;
     border-radius: 8px;
-    padding: 0.75rem 1.4rem;
+    padding: 0.7rem 1.3rem;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
     box-shadow: 0 2px 4px rgba(234,88,12,0.25);
-    transition: background 0.15s;
+    transition: background 0.15s, transform 0.1s;
+    touch-action: manipulation;
+    white-space: nowrap;
   }
   .action-btn:hover { background: var(--primary-hover); }
+  .action-btn:active { transform: scale(0.98); }
   .action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   .btn-secondary {
     background: #e2e8f0;
@@ -201,12 +246,54 @@
   }
   .btn-secondary:hover { background: #cbd5e1; }
 
-  /* Hazard Cards */
+  /* Hazard Cards & Gauge */
+  .gauge-box {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #fff;
+    border-radius: 14px;
+    padding: 1.3rem;
+    margin-bottom: 1.5rem;
+  }
+  .score-dial {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    border: 5px solid var(--danger);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.45rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .gauge-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .gauge-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  #assessment-label {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #f87171;
+  }
+
   .hazard-item {
     border-left: 4px solid #cbd5e1;
     background: #fff;
     border-radius: 0 10px 10px 0;
-    padding: 1rem 1.25rem;
+    padding: 1rem 1.15rem;
     margin-bottom: 0.85rem;
     border-top: 1px solid var(--border);
     border-right: 1px solid var(--border);
@@ -219,16 +306,19 @@
   .hazard-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    gap: 0.5rem;
     margin-bottom: 0.4rem;
+    flex-wrap: wrap;
   }
-  .hazard-title { font-weight: 700; font-size: 1.05rem; }
+  .hazard-title { font-weight: 700; font-size: 1.02rem; flex: 1; min-width: 180px; }
   .severity-tag {
     font-size: 0.75rem;
     font-weight: 700;
     padding: 0.2rem 0.55rem;
     border-radius: 6px;
     text-transform: uppercase;
+    flex-shrink: 0;
   }
   .severity-tag.High { background: var(--danger-bg); color: var(--danger); border: 1px solid #fecaca; }
   .severity-tag.Medium { background: var(--warning-bg); color: #d97706; border: 1px solid #fde68a; }
@@ -255,33 +345,20 @@
     font-weight: 500;
   }
 
-  /* Score Gauge */
-  .gauge-box {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    color: #fff;
-    border-radius: 14px;
-    padding: 1.4rem;
-    margin-bottom: 1.5rem;
-  }
-  .score-dial {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 6px solid var(--danger);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 1.5rem;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-
   /* LIVE HAZARD SPOTTER */
+  .live-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+    flex-wrap: wrap;
+  }
+  .live-panel-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
   .camera-container {
     position: relative;
     width: 100%;
@@ -289,7 +366,7 @@
     border-radius: 14px;
     overflow: hidden;
     aspect-ratio: 16/9;
-    max-height: 520px;
+    max-height: 500px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -301,23 +378,25 @@
   }
   .camera-hud {
     position: absolute;
-    top: 1rem;
-    left: 1rem;
-    right: 1rem;
+    top: 0.85rem;
+    left: 0.85rem;
+    right: 0.85rem;
     display: flex;
     justify-content: space-between;
     pointer-events: none;
+    gap: 0.5rem;
   }
   .live-indicator {
     background: rgba(239, 68, 68, 0.9);
     color: #fff;
-    padding: 0.3rem 0.75rem;
+    padding: 0.3rem 0.7rem;
     border-radius: 20px;
     font-weight: 700;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     display: flex;
     align-items: center;
     gap: 0.4rem;
+    backdrop-filter: blur(4px);
   }
   .pulse-dot {
     width: 8px;
@@ -330,25 +409,26 @@
 
   .speech-hud {
     position: absolute;
-    bottom: 1.25rem;
-    left: 1rem;
-    right: 1rem;
-    background: rgba(15, 23, 42, 0.88);
-    backdrop-filter: blur(8px);
+    bottom: 0.85rem;
+    left: 0.85rem;
+    right: 0.85rem;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(10px);
     color: #fff;
     border-radius: 10px;
-    padding: 1rem;
-    border: 1px solid rgba(255,255,255,0.15);
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(255,255,255,0.18);
   }
   .speech-hud-title {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
     color: #94a3b8;
     font-weight: 700;
     margin-bottom: 0.25rem;
+    letter-spacing: 0.04em;
   }
   .speech-hud-text {
-    font-size: 1.05rem;
+    font-size: 0.98rem;
     font-weight: 600;
     line-height: 1.4;
     color: #f8fafc;
@@ -366,14 +446,16 @@
     color: #fff;
     border: none;
     border-radius: 50px;
-    padding: 0.8rem 1.6rem;
-    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.98rem;
     font-weight: 700;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
-    transition: transform 0.1s;
+    transition: transform 0.1s, background 0.15s;
+    touch-action: manipulation;
   }
   .mic-btn:active { transform: scale(0.97); }
   .mic-btn.listening {
@@ -385,16 +467,23 @@
     70% { box-shadow: 0 0 0 16px rgba(124, 58, 237, 0); }
     100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
   }
+  .live-quick-prompts {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    flex: 1;
+  }
 
   /* CHAT / A2UI MODE */
   #log {
-    height: 520px;
+    height: clamp(340px, 52vh, 520px);
     overflow-y: auto;
     padding: 1rem;
     background: #fff;
     border: 1px solid var(--border);
     border-radius: 12px;
     margin-bottom: 1rem;
+    scroll-behavior: smooth;
   }
   .msg { margin: 0.75rem 0; }
   .msg.user { text-align: right; }
@@ -407,8 +496,9 @@
     text-align: left;
     max-width: 85%;
     white-space: pre-wrap;
-    font-size: 0.95rem;
+    font-size: 0.94rem;
     line-height: 1.5;
+    word-break: break-word;
   }
   .msg.user .bubble {
     background: var(--primary);
@@ -421,19 +511,21 @@
   .a2card {
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 1.1rem;
+    padding: 1rem;
     background: #fff;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     margin-top: 0.6rem;
+    max-width: 100%;
+    overflow-x: auto;
   }
   .a2col { display: flex; flex-direction: column; gap: 0.5rem; }
   .a2row { display: flex; flex-direction: row; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
   .a2text { margin: 0; line-height: 1.45; }
-  .a2text.a2-h1 { font-size: 1.4rem; font-weight: 800; color: #0f172a; }
-  .a2text.a2-h2 { font-size: 1.2rem; font-weight: 700; color: #1e293b; }
-  .a2text.a2-h3 { font-size: 1.05rem; font-weight: 600; color: #334155; }
+  .a2text.a2-h1 { font-size: 1.35rem; font-weight: 800; color: #0f172a; }
+  .a2text.a2-h2 { font-size: 1.15rem; font-weight: 700; color: #1e293b; }
+  .a2text.a2-h3 { font-size: 1rem; font-weight: 600; color: #334155; }
   .a2text.a2-caption { font-size: 0.82rem; color: #64748b; }
-  .a2img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); display: block; margin: 0.5rem 0; }
+  .a2img { max-width: 100%; height: auto; max-height: 280px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border); display: block; margin: 0.5rem 0; }
 
   .chat-form {
     display: flex;
@@ -441,11 +533,14 @@
   }
   .chat-form input {
     flex: 1;
-    padding: 0.8rem 1rem;
+    padding: 0.75rem 1rem;
     border: 1px solid var(--border);
     border-radius: 8px;
-    font-size: 0.95rem;
+    font-size: 16px; /* Prevents auto-zoom on iOS */
+    outline: none;
+    transition: border-color 0.15s;
   }
+  .chat-form input:focus { border-color: var(--primary); }
   .chat-chips {
     display: flex;
     gap: 0.4rem;
@@ -456,66 +551,253 @@
     background: #f1f5f9;
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 0.3rem 0.75rem;
+    padding: 0.35rem 0.75rem;
     font-size: 0.78rem;
     font-weight: 600;
     color: #475569;
     cursor: pointer;
+    touch-action: manipulation;
   }
   .chip-btn:hover { background: #e2e8f0; color: #0f172a; }
 
   footer {
     text-align: center;
-    padding: 1.25rem;
+    padding: 1.25rem 1rem;
     color: var(--text-muted);
     font-size: 0.8rem;
     border-top: 1px solid var(--border);
     background: #fff;
+    line-height: 1.4;
   }
-  .disclaimer {
-    background: var(--warning-bg);
-    border: 1px solid #fde68a;
-    border-radius: 8px;
-    padding: 0.6rem 0.9rem;
-    font-size: 0.8rem;
-    color: #92400e;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+
+  /* ========================================================================= */
+  /* SCREEN-FRIENDLY RESPONSIVE BREAKPOINTS (MOBILE & TABLET)                   */
+  /* ========================================================================= */
+
+  @media (max-width: 768px) {
+    header {
+      padding: 0.75rem 1rem;
+    }
+    .header-inner {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.65rem;
+    }
+    .brand {
+      justify-content: space-between;
+      width: 100%;
+    }
+    .nav-tabs {
+      width: 100%;
+      display: flex;
+      gap: 0.3rem;
+      padding: 0.25rem;
+    }
+    .nav-btn {
+      flex: 1;
+      padding: 0.55rem 0.4rem;
+      font-size: 0.84rem;
+      gap: 0.35rem;
+    }
+    main {
+      padding: 0.9rem 0.75rem;
+    }
+    .card {
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    /* Compact Header on small phones */
+    .tab-label-full { display: none; }
+    .tab-label-short { display: inline; }
+    .nav-btn {
+      font-size: 0.8rem;
+      padding: 0.5rem 0.25rem;
+    }
+    .nav-btn .material-symbols-outlined {
+      font-size: 18px !important;
+    }
+
+    /* Swipeable Samples Bar */
+    .samples-bar {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      padding-bottom: 0.4rem;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .samples-bar::-webkit-scrollbar { display: none; }
+    .sample-chip {
+      flex-shrink: 0;
+      white-space: nowrap;
+      font-size: 0.78rem;
+      padding: 0.35rem 0.75rem;
+    }
+
+    /* Dropzone on Mobile */
+    .dropzone {
+      padding: 1.6rem 1rem;
+    }
+
+    /* Preview Box on Mobile */
+    .preview-area {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .preview-area .action-btn {
+      width: 100%;
+      justify-content: center;
+      padding: 0.8rem;
+    }
+
+    /* Gauge Box on Mobile */
+    .gauge-box {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+      padding: 1.1rem;
+    }
+    .gauge-top-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.6rem;
+    }
+    .gauge-top-row .action-btn {
+      width: 100%;
+      justify-content: center;
+      padding: 0.75rem;
+    }
+
+    /* Live Hazard Spotter on Mobile */
+    .live-panel-header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.6rem;
+    }
+    .live-panel-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      width: 100%;
+    }
+    .live-panel-actions .action-btn {
+      width: 100%;
+      padding: 0.55rem 0.5rem;
+      font-size: 0.8rem;
+      justify-content: center;
+    }
+    .camera-container {
+      aspect-ratio: 4/3;
+      min-height: 280px;
+      max-height: 52vh;
+    }
+    .speech-hud {
+      bottom: 0.5rem;
+      left: 0.5rem;
+      right: 0.5rem;
+      padding: 0.7rem 0.85rem;
+    }
+    .speech-hud-title {
+      font-size: 0.68rem;
+    }
+    .speech-hud-text {
+      font-size: 0.88rem;
+      line-height: 1.35;
+    }
+    .live-controls {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
+    .mic-btn {
+      width: 100%;
+      padding: 0.85rem;
+      font-size: 1rem;
+    }
+    .live-quick-prompts {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      padding-bottom: 0.35rem;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      width: 100%;
+    }
+    .live-quick-prompts::-webkit-scrollbar { display: none; }
+    .live-quick-prompts .sample-chip {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    /* Chat / OSHA Agent on Mobile */
+    #log {
+      height: clamp(280px, 48vh, 420px);
+      padding: 0.75rem;
+    }
+    .bubble {
+      max-width: 92%;
+      font-size: 0.9rem;
+      padding: 0.65rem 0.9rem;
+    }
+    .chat-chips {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      padding-bottom: 0.35rem;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .chat-chips::-webkit-scrollbar { display: none; }
+    .chat-chips .chip-btn {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .chat-form button {
+      min-width: 68px;
+      padding: 0.75rem 0.9rem;
+    }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="brand">
-    <div class="brand-icon">
-      <span class="material-symbols-outlined" style="font-size: 20px;">health_and_safety</span>
+  <div class="header-inner">
+    <div class="brand">
+      <div style="display: flex; align-items: center; gap: 0.6rem;">
+        <div class="brand-icon">
+          <span class="material-symbols-outlined" style="font-size: 20px;">health_and_safety</span>
+        </div>
+        <span>SiteSafeAgent</span>
+      </div>
+      <span class="badge">Track 3 Agent</span>
     </div>
-    <span>SiteSafeAgent</span>
-    <span class="badge">Track 3 Agent</span>
-  </div>
 
-  <div class="nav-tabs">
-    <button class="nav-btn active" id="tab-photo" onclick="switchTab('photo')">
-      <span class="material-symbols-outlined" style="font-size: 18px;">photo_camera</span>
-      Photo Inspector
-    </button>
-    <button class="nav-btn" id="tab-live" onclick="switchTab('live')">
-      <span class="material-symbols-outlined" style="font-size: 18px;">videocam</span>
-      Live Hazard Spotter
-    </button>
-    <button class="nav-btn" id="tab-chat" onclick="switchTab('chat')">
-      <span class="material-symbols-outlined" style="font-size: 18px;">smart_toy</span>
-      OSHA Agent
-    </button>
+    <div class="nav-tabs">
+      <button class="nav-btn active" id="tab-photo" onclick="switchTab('photo')">
+        <span class="material-symbols-outlined" style="font-size: 18px;">photo_camera</span>
+        <span class="tab-label-full">Photo Inspector</span>
+        <span class="tab-label-short">Photos</span>
+      </button>
+      <button class="nav-btn" id="tab-live" onclick="switchTab('live')">
+        <span class="material-symbols-outlined" style="font-size: 18px;">videocam</span>
+        <span class="tab-label-full">Live Hazard Spotter</span>
+        <span class="tab-label-short">Live Feed</span>
+      </button>
+      <button class="nav-btn" id="tab-chat" onclick="switchTab('chat')">
+        <span class="material-symbols-outlined" style="font-size: 18px;">smart_toy</span>
+        <span class="tab-label-full">OSHA Agent</span>
+        <span class="tab-label-short">OSHA</span>
+      </button>
+    </div>
   </div>
 </header>
 
 <main>
   <div class="disclaimer">
-    <span class="material-symbols-outlined" style="font-size: 18px;">info</span>
+    <span class="material-symbols-outlined" style="font-size: 18px; flex-shrink: 0;">info</span>
     <span><strong>Safety Notice:</strong> SiteSafeAgent provides assistive hazard detection based on OSHA 29 CFR 1926 standards. Always consult certified safety officers.</span>
   </div>
 
@@ -530,7 +812,7 @@
       </p>
 
       <!-- Demo quick-load samples -->
-      <div style="font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 0.4rem;">Demo Scenarios (Click to test instantly):</div>
+      <div style="font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 0.4rem;">Demo Scenarios (Swipe to test instantly):</div>
       <div class="samples-bar">
         <button class="sample-chip" onclick="loadSample('/demo/worker_no_harness.jpg', 'Worker on Edge (Fall Risk)')">
           <span class="material-symbols-outlined" style="font-size: 16px; color: var(--danger);">warning</span>
@@ -556,10 +838,12 @@
 
       <!-- Selected Image Preview -->
       <div id="preview-box" class="preview-area" style="display: none;">
-        <img id="preview-img" class="preview-img" src="" alt="Selected site image">
-        <div style="flex: 1;">
-          <div id="preview-name" style="font-weight: 600; font-size: 0.95rem;">sample.jpg</div>
-          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Jobsite: Hudson Yards Area 4B</div>
+        <div class="preview-thumb-row">
+          <img id="preview-img" class="preview-img" src="" alt="Selected site image">
+          <div style="flex: 1; min-width: 0;">
+            <div id="preview-name" style="font-weight: 600; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">sample.jpg</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Jobsite: Hudson Yards Area 4B</div>
+          </div>
         </div>
         <button class="action-btn" id="analyze-btn" onclick="runPhotoAnalysis()">
           <span class="material-symbols-outlined" style="font-size: 18px;">search_insights</span>
@@ -571,23 +855,26 @@
     <!-- Results Area -->
     <div id="results-area" style="display: none;">
       <div class="gauge-box">
-        <div class="score-dial" id="score-dial">
-          <span id="score-num">85</span>
-          <span style="font-size: 0.65rem; font-weight: 600; text-transform: uppercase;">Risk</span>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <div class="score-dial" id="score-dial">
+            <span id="score-num">85</span>
+            <span style="font-size: 0.62rem; font-weight: 600; text-transform: uppercase;">Risk</span>
+          </div>
+          <div id="assessment-label">CRITICAL HAZARDS DETECTED</div>
         </div>
-        <div style="flex: 1;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
-            <div id="assessment-label" style="font-size: 1.15rem; font-weight: 800; color: #f87171;">CRITICAL HAZARDS DETECTED</div>
-            <button class="action-btn" onclick="exportPDF()" style="background: #2563eb; padding: 0.5rem 1rem; font-size: 0.85rem;">
+        <div class="gauge-content">
+          <div id="summary-text" style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.45; margin-bottom: 0.75rem;"></div>
+          <div class="gauge-top-row">
+            <div></div>
+            <button class="action-btn" onclick="exportPDF()" style="background: #2563eb; padding: 0.55rem 1.1rem; font-size: 0.88rem;">
               <span class="material-symbols-outlined" style="font-size: 16px;">picture_as_pdf</span>
               Export PDF Report
             </button>
           </div>
-          <div id="summary-text" style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.45;"></div>
         </div>
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
         <h3 style="font-size: 1.1rem; font-weight: 700;">Identified OSHA Violations & Corrective Actions</h3>
         <span id="hazard-count" class="badge" style="background: #e2e8f0; color: #1e293b; font-weight: 700;">0 Hazards Found</span>
       </div>
@@ -601,12 +888,12 @@
   <!-- ========================================================================= -->
   <div id="view-live" class="view-panel">
     <div class="card" style="padding: 1rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+      <div class="live-panel-header">
         <div>
           <h2 style="font-size: 1.25rem; font-weight: 700;">Live Hazard Spotter</h2>
           <p style="color: var(--text-muted); font-size: 0.85rem;">Point your camera at work equipment and speak. Gemini provides instant voice assessment.</p>
         </div>
-        <div style="display: flex; gap: 0.5rem;">
+        <div class="live-panel-actions">
           <button class="action-btn btn-secondary" onclick="toggleCamera()" id="cam-toggle-btn" style="padding: 0.45rem 0.85rem; font-size: 0.82rem;">
             <span class="material-symbols-outlined" style="font-size: 16px;">videocam</span>
             Start Camera
@@ -648,7 +935,7 @@
           <span id="mic-label">Ask "Is this safe?"</span>
         </button>
 
-        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+        <div class="live-quick-prompts">
           <button class="sample-chip" onclick="askLiveCustom('Is this ladder safely placed and secured?')">
             "Check ladder placement"
           </button>
@@ -684,7 +971,7 @@
       <div id="log"></div>
 
       <form id="chat-form" class="chat-form" onsubmit="handleChatSubmit(event)">
-        <input id="chat-input" placeholder="Ask about OSHA 1926 standards, regulations, or safety audits…" autocomplete="off">
+        <input id="chat-input" placeholder="Ask about OSHA 1926 standards, regulations, or safety audits..." autocomplete="off">
         <button type="submit" class="action-btn">
           <span class="material-symbols-outlined" style="font-size: 18px;">send</span>
           Send
