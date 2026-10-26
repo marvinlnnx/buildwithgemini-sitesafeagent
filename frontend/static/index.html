@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SiteSafeAgent: Jobsite Safety Inspector</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Material+Symbols+Outlined">
+<script src="/js/jspdf.umd.min.js"></script>
+<script src="/js/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root {
+    --primary: #ea580c;
+    --primary-hover: #c2410c;
+    --primary-bg: #fff7ed;
+    --dark: #0f172a;
+    --surface: #ffffff;
+    --bg: #f8fafc;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --danger: #ef4444;
+    --danger-bg: #fef2f2;
+    --warning: #f59e0b;
+    --warning-bg: #fffbeb;
+    --success: #10b981;
+    --success-bg: #ecfdf5;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: var(--dark);
+    color: #fff;
+    padding: 0.9rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .brand-icon {
+    background: var(--primary);
+    color: #fff;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .badge {
+    font-size: 0.72rem;
+    background: rgba(255,255,255,0.15);
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  .nav-tabs {
+    display: flex;
+    gap: 0.5rem;
+    background: rgba(255,255,255,0.08);
+    padding: 0.25rem;
+    border-radius: 10px;
+  }
+  .nav-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    padding: 0.45rem 0.9rem;
+    border-radius: 7px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.15s ease;
+  }
+  .nav-btn.active {
+    background: var(--primary);
+    color: #fff;
+  }
+  .nav-btn:hover:not(.active) {
+    color: #fff;
+    background: rgba(255,255,255,0.06);
+  }
+
+  main {
+    flex: 1;
+    max-width: 1080px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+  }
+  .view-panel { display: none; }
+  .view-panel.active { display: block; }
+
+  /* Utility Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    margin-bottom: 1.25rem;
+  }
+
+  /* PHOTO INSPECTOR MODE */
+  .samples-bar {
+    display: flex;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .sample-chip {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.15s;
+  }
+  .sample-chip:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-bg);
+  }
+
+  .dropzone {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 2.2rem 1.5rem;
+    text-align: center;
+    background: #fdfdfe;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .dropzone:hover { border-color: var(--primary); }
+  .dropzone input { display: none; }
+
+  .preview-area {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 1rem;
+    background: #f1f5f9;
+    padding: 0.75rem;
+    border-radius: 10px;
+  }
+  .preview-img {
+    width: 110px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .action-btn {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.4rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 4px rgba(234,88,12,0.25);
+    transition: background 0.15s;
+  }
+  .action-btn:hover { background: var(--primary-hover); }
+  .action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-secondary {
+    background: #e2e8f0;
+    color: #1e293b;
+    box-shadow: none;
+  }
+  .btn-secondary:hover { background: #cbd5e1; }
+
+  /* Hazard Cards */
+  .hazard-item {
+    border-left: 4px solid #cbd5e1;
+    background: #fff;
+    border-radius: 0 10px 10px 0;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.85rem;
+    border-top: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .hazard-item.High { border-left-color: var(--danger); }
+  .hazard-item.Medium { border-left-color: var(--warning); }
+  .hazard-item.Low { border-left-color: var(--success); }
+
+  .hazard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.4rem;
+  }
+  .hazard-title { font-weight: 700; font-size: 1.05rem; }
+  .severity-tag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+  }
+  .severity-tag.High { background: var(--danger-bg); color: var(--danger); border: 1px solid #fecaca; }
+  .severity-tag.Medium { background: var(--warning-bg); color: #d97706; border: 1px solid #fde68a; }
+  .severity-tag.Low { background: var(--success-bg); color: var(--success); border: 1px solid #a7f3d0; }
+
+  .osha-code {
+    display: inline-block;
+    font-family: monospace;
+    font-size: 0.82rem;
+    background: #f1f5f9;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    color: #475569;
+    margin-bottom: 0.5rem;
+  }
+  .hazard-desc { font-size: 0.9rem; color: #334155; margin-bottom: 0.6rem; line-height: 1.45; }
+  .hazard-fix {
+    background: #f8fafc;
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.86rem;
+    border: 1px solid #e2e8f0;
+    color: #0f766e;
+    font-weight: 500;
+  }
+
+  /* Score Gauge */
+  .gauge-box {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #fff;
+    border-radius: 14px;
+    padding: 1.4rem;
+    margin-bottom: 1.5rem;
+  }
+  .score-dial {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 6px solid var(--danger);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.5rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  /* LIVE HAZARD SPOTTER */
+  .camera-container {
+    position: relative;
+    width: 100%;
+    background: #000;
+    border-radius: 14px;
+    overflow: hidden;
+    aspect-ratio: 16/9;
+    max-height: 520px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  video, canvas.live-canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .camera-hud {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+  .live-indicator {
+    background: rgba(239, 68, 68, 0.9);
+    color: #fff;
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    animation: pulse 1s infinite alternate;
+  }
+  @keyframes pulse { from { opacity: 0.3; } to { opacity: 1; } }
+
+  .speech-hud {
+    position: absolute;
+    bottom: 1.25rem;
+    left: 1rem;
+    right: 1rem;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    border-radius: 10px;
+    padding: 1rem;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .speech-hud-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #94a3b8;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+  .speech-hud-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #f8fafc;
+  }
+
+  .live-controls {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+  .mic-btn {
+    background: var(--danger);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 0.8rem 1.6rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: transform 0.1s;
+  }
+  .mic-btn:active { transform: scale(0.97); }
+  .mic-btn.listening {
+    background: #7c3aed;
+    animation: mic-pulse 1.2s infinite;
+  }
+  @keyframes mic-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.7); }
+    70% { box-shadow: 0 0 0 16px rgba(124, 58, 237, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+  }
+
+  /* CHAT / A2UI MODE */
+  #log {
+    height: 520px;
+    overflow-y: auto;
+    padding: 1rem;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+  }
+  .msg { margin: 0.75rem 0; }
+  .msg.user { text-align: right; }
+  .bubble {
+    display: inline-block;
+    padding: 0.75rem 1.1rem;
+    border-radius: 12px;
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+    text-align: left;
+    max-width: 85%;
+    white-space: pre-wrap;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .msg.user .bubble {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+  }
+  .bubble.rich { background: transparent; border: none; padding: 0; max-width: 100%; white-space: normal; }
+
+  /* A2UI Component Renderer */
+  .a2card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.1rem;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-top: 0.6rem;
+  }
+  .a2col { display: flex; flex-direction: column; gap: 0.5rem; }
+  .a2row { display: flex; flex-direction: row; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+  .a2text { margin: 0; line-height: 1.45; }
+  .a2text.a2-h1 { font-size: 1.4rem; font-weight: 800; color: #0f172a; }
+  .a2text.a2-h2 { font-size: 1.2rem; font-weight: 700; color: #1e293b; }
+  .a2text.a2-h3 { font-size: 1.05rem; font-weight: 600; color: #334155; }
+  .a2text.a2-caption { font-size: 0.82rem; color: #64748b; }
+  .a2img { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); display: block; margin: 0.5rem 0; }
+
+  .chat-form {
+    display: flex;
+    gap: 0.6rem;
+  }
+  .chat-form input {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+  }
+  .chat-chips {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.6rem;
+  }
+  .chip-btn {
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+  }
+  .chip-btn:hover { background: #e2e8f0; color: #0f172a; }
+
+  footer {
+    text-align: center;
+    padding: 1.25rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--border);
+    background: #fff;
+  }
+  .disclaimer {
+    background: var(--warning-bg);
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.8rem;
+    color: #92400e;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">
+      <span class="material-symbols-outlined" style="font-size: 20px;">health_and_safety</span>
+    </div>
+    <span>SiteSafeAgent</span>
+    <span class="badge">Track 3 Agent</span>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-btn active" id="tab-photo" onclick="switchTab('photo')">
+      <span class="material-symbols-outlined" style="font-size: 18px;">photo_camera</span>
+      Photo Inspector
+    </button>
+    <button class="nav-btn" id="tab-live" onclick="switchTab('live')">
+      <span class="material-symbols-outlined" style="font-size: 18px;">videocam</span>
+      Live Hazard Spotter
+    </button>
+    <button class="nav-btn" id="tab-chat" onclick="switchTab('chat')">
+      <span class="material-symbols-outlined" style="font-size: 18px;">smart_toy</span>
+      OSHA Agent
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="disclaimer">
+    <span class="material-symbols-outlined" style="font-size: 18px;">info</span>
+    <span><strong>Safety Notice:</strong> SiteSafeAgent provides assistive hazard detection based on OSHA 29 CFR 1926 standards. Always consult certified safety officers.</span>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 1. PHOTO INSPECTOR VIEW                                                  -->
+  <!-- ========================================================================= -->
+  <div id="view-photo" class="view-panel active">
+    <div class="card">
+      <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.35rem;">Photo Inspector</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+        Upload jobsite photos for an instant OSHA violation audit, hazard severity rating, and downloadable PDF report.
+      </p>
+
+      <!-- Demo quick-load samples -->
+      <div style="font-size: 0.82rem; font-weight: 600; color: #475569; margin-bottom: 0.4rem;">Demo Scenarios (Click to test instantly):</div>
+      <div class="samples-bar">
+        <button class="sample-chip" onclick="loadSample('/demo/worker_no_harness.jpg', 'Worker on Edge (Fall Risk)')">
+          <span class="material-symbols-outlined" style="font-size: 16px; color: var(--danger);">warning</span>
+          Demo 1: Worker Without Harness (Fall Hazard)
+        </button>
+        <button class="sample-chip" onclick="loadSample('/demo/unsecured_ladder.jpg', 'Unsecured Extension Ladder')">
+          <span class="material-symbols-outlined" style="font-size: 16px; color: var(--warning);">stairs</span>
+          Demo 2: Unsecured Ladder Angle
+        </button>
+        <button class="sample-chip" onclick="loadSample('/demo/proper_ppe.jpg', 'Compliant PPE Worker')">
+          <span class="material-symbols-outlined" style="font-size: 16px; color: var(--success);">check_circle</span>
+          Demo 3: Certified PPE Worker
+        </button>
+      </div>
+
+      <!-- Upload Dropzone -->
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+        <span class="material-symbols-outlined" style="font-size: 42px; color: #94a3b8; margin-bottom: 0.5rem;">cloud_upload</span>
+        <div style="font-weight: 600; font-size: 1rem; color: #1e293b;">Drag and drop site photos here, or click to browse</div>
+        <div style="font-size: 0.82rem; color: #64748b; margin-top: 0.25rem;">Supports JPG, PNG, WEBP (Smartphone camera uploads)</div>
+        <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)">
+      </div>
+
+      <!-- Selected Image Preview -->
+      <div id="preview-box" class="preview-area" style="display: none;">
+        <img id="preview-img" class="preview-img" src="" alt="Selected site image">
+        <div style="flex: 1;">
+          <div id="preview-name" style="font-weight: 600; font-size: 0.95rem;">sample.jpg</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem;">Jobsite: Hudson Yards Area 4B</div>
+        </div>
+        <button class="action-btn" id="analyze-btn" onclick="runPhotoAnalysis()">
+          <span class="material-symbols-outlined" style="font-size: 18px;">search_insights</span>
+          Analyze Hazards
+        </button>
+      </div>
+    </div>
+
+    <!-- Results Area -->
+    <div id="results-area" style="display: none;">
+      <div class="gauge-box">
+        <div class="score-dial" id="score-dial">
+          <span id="score-num">85</span>
+          <span style="font-size: 0.65rem; font-weight: 600; text-transform: uppercase;">Risk</span>
+        </div>
+        <div style="flex: 1;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+            <div id="assessment-label" style="font-size: 1.15rem; font-weight: 800; color: #f87171;">CRITICAL HAZARDS DETECTED</div>
+            <button class="action-btn" onclick="exportPDF()" style="background: #2563eb; padding: 0.5rem 1rem; font-size: 0.85rem;">
+              <span class="material-symbols-outlined" style="font-size: 16px;">picture_as_pdf</span>
+              Export PDF Report
+            </button>
+          </div>
+          <div id="summary-text" style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.45;"></div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 700;">Identified OSHA Violations & Corrective Actions</h3>
+        <span id="hazard-count" class="badge" style="background: #e2e8f0; color: #1e293b; font-weight: 700;">0 Hazards Found</span>
+      </div>
+
+      <div id="hazards-list"></div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 2. LIVE HAZARD SPOTTER VIEW                                              -->
+  <!-- ========================================================================= -->
+  <div id="view-live" class="view-panel">
+    <div class="card" style="padding: 1rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <div>
+          <h2 style="font-size: 1.25rem; font-weight: 700;">Live Hazard Spotter</h2>
+          <p style="color: var(--text-muted); font-size: 0.85rem;">Point your camera at work equipment and speak. Gemini provides instant voice assessment.</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="action-btn btn-secondary" onclick="toggleCamera()" id="cam-toggle-btn" style="padding: 0.45rem 0.85rem; font-size: 0.82rem;">
+            <span class="material-symbols-outlined" style="font-size: 16px;">videocam</span>
+            Start Camera
+          </button>
+          <button class="action-btn btn-secondary" onclick="simulateLiveFeed()" style="padding: 0.45rem 0.85rem; font-size: 0.82rem;">
+            <span class="material-symbols-outlined" style="font-size: 16px;">play_circle</span>
+            Simulate Video
+          </button>
+        </div>
+      </div>
+
+      <!-- Viewfinder -->
+      <div class="camera-container">
+        <video id="live-video" autoplay playsinline muted style="display: none;"></video>
+        <canvas id="live-canvas" class="live-canvas"></canvas>
+
+        <div class="camera-hud">
+          <div class="live-indicator">
+            <div class="pulse-dot"></div>
+            <span>LIVE GEMINI STREAM</span>
+          </div>
+          <div id="live-status-pill" class="badge" style="background: rgba(0,0,0,0.6); color: #fff;">
+            Camera Ready
+          </div>
+        </div>
+
+        <div class="speech-hud">
+          <div class="speech-hud-title">Gemini Spoken Inspection Response:</div>
+          <div class="speech-hud-text" id="speech-hud-text">
+            "Point camera at ladder, scaffolding, or worker and ask: 'Is this safe?'"
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls & Quick Voice Prompts -->
+      <div class="live-controls">
+        <button class="mic-btn" id="mic-btn" onclick="triggerVoiceAsk()">
+          <span class="material-symbols-outlined" id="mic-icon" style="font-size: 22px;">mic</span>
+          <span id="mic-label">Ask "Is this safe?"</span>
+        </button>
+
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+          <button class="sample-chip" onclick="askLiveCustom('Is this ladder safely placed and secured?')">
+            "Check ladder placement"
+          </button>
+          <button class="sample-chip" onclick="askLiveCustom('Is this worker wearing proper fall protection?')">
+            "Check fall protection"
+          </button>
+          <button class="sample-chip" onclick="askLiveCustom('Are these workers wearing mandatory hard hats and safety gear?')">
+            "Check PPE compliance"
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 3. OSHA AGENT (A2UI) CHAT VIEW                                           -->
+  <!-- ========================================================================= -->
+  <div id="view-chat" class="view-panel">
+    <div class="card">
+      <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.35rem;">OSHA Agent</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.75rem;">
+        Ask the agent about OSHA standards, query your Firestore inspection log, or compute risk indexes. Replies render as rich A2UI cards.
+      </p>
+
+      <div class="chat-chips">
+        <button class="chip-btn" onclick="sendChatPrompt('What OSHA rules apply to fall protection?')">Fall Protection Rules</button>
+        <button class="chip-btn" onclick="sendChatPrompt('Show historical inspection records from Firestore')">Inspection History</button>
+        <button class="chip-btn" onclick="sendChatPrompt('Calculate site risk score for 2 high and 1 medium severity hazards')">Calculate Risk Score</button>
+        <button class="chip-btn" onclick="sendChatPrompt('Check live weather conditions for jobsite in New York')">Live Weather Advisory</button>
+        <button class="chip-btn" onclick="sendChatPrompt('Generate a safety warning sign for fall protection harness required')">Generate Safety Sign</button>
+      </div>
+
+      <div id="log"></div>
+
+      <form id="chat-form" class="chat-form" onsubmit="handleChatSubmit(event)">
+        <input id="chat-input" placeholder="Ask about OSHA 1926 standards, regulations, or safety audits…" autocomplete="off">
+        <button type="submit" class="action-btn">
+          <span class="material-symbols-outlined" style="font-size: 18px;">send</span>
+          Send
+        </button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<footer>
+  SiteSafeAgent · Build with Gemini · Track 3 (Agent-First Apps) · Powered by Gemini Multimodal, Vertex AI & ADK
+</footer>
+
+<script>
+// State
+let currentTab = 'photo';
+let selectedImageBase64 = null;
+let currentInspectionData = null;
+let websocket = null;
+let cameraStream = null;
+let simulatedInterval = null;
+
+// TAB SWITCHING
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  document.getElementById(`view-${tab}`).classList.add('active');
+
+  if (tab === 'live') {
+    initLiveWebSocket();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 1. PHOTO INSPECTOR LOGIC
+// ---------------------------------------------------------------------------
+function loadSample(url, name) {
+  fetch(url)
+    .then(r => r.blob())
+    .then(blob => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        selectedImageBase64 = e.target.result;
+        showPreview(selectedImageBase64, name);
+        runPhotoAnalysis();
+      };
+      reader.readAsDataURL(blob);
+    });
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    selectedImageBase64 = evt.target.result;
+    showPreview(selectedImageBase64, file.name);
+  };
+  reader.readAsDataURL(file);
+}
+
+function showPreview(dataUrl, name) {
+  document.getElementById('preview-img').src = dataUrl;
+  document.getElementById('preview-name').textContent = name;
+  document.getElementById('preview-box').style.display = 'flex';
+  document.getElementById('dropzone').style.display = 'none';
+}
+
+async function runPhotoAnalysis() {
+  if (!selectedImageBase64) return;
+  const analyzeBtn = document.getElementById('analyze-btn');
+  analyzeBtn.disabled = true;
+  analyzeBtn.innerHTML = '<span class="material-symbols-outlined" style="animation: spin 1s infinite linear;">sync</span> Analyzing...';
+
+  try {
+    const formData = new FormData();
+    formData.append('image_data', selectedImageBase64);
+    formData.append('jobsite', 'Hudson Yards Area 4B');
+    formData.append('inspector', 'Site Safety Officer (AI Assisted)');
+
+    const res = await fetch('/api/analyze-photo', {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    currentInspectionData = data;
+    renderResults(data);
+  } catch (err) {
+    alert('Analysis failed: ' + err.message);
+  } finally {
+    analyzeBtn.disabled = false;
+    analyzeBtn.innerHTML = '<span class="material-symbols-outlined">search_insights</span> Analyze Hazards';
+  }
+}
+
+function renderResults(data) {
+  document.getElementById('results-area').style.display = 'block';
+  const score = data.overall_risk_score || 50;
+  document.getElementById('score-num').textContent = score;
+
+  const dial = document.getElementById('score-dial');
+  const label = document.getElementById('assessment-label');
+  if (score >= 70) {
+    dial.style.borderColor = '#ef4444';
+    label.style.color = '#ef4444';
+    label.textContent = 'CRITICAL HAZARDS DETECTED';
+  } else if (score >= 35) {
+    dial.style.borderColor = '#f59e0b';
+    label.style.color = '#f59e0b';
+    label.textContent = 'MODERATE RISKS DETECTED';
+  } else {
+    dial.style.borderColor = '#10b981';
+    label.style.color = '#10b981';
+    label.textContent = 'NOMINAL / LOW RISK';
+  }
+
+  document.getElementById('summary-text').textContent = data.summary || data.overall_assessment || '';
+  const hazards = data.hazards || [];
+  document.getElementById('hazard-count').textContent = `${hazards.length} Hazards Identified`;
+
+  const list = document.getElementById('hazards-list');
+  list.innerHTML = '';
+  hazards.forEach(h => {
+    const item = document.createElement('div');
+    item.className = `hazard-item ${h.severity || 'Medium'}`;
+    item.innerHTML = `
+      <div class="hazard-header">
+        <div class="hazard-title">${escapeHtml(h.title)}</div>
+        <span class="severity-tag ${h.severity}">${escapeHtml(h.severity)} Severity</span>
+      </div>
+      <div class="osha-code">${escapeHtml(h.osha_rule || 'OSHA 1926 Standard')}</div>
+      <div class="hazard-desc">${escapeHtml(h.description)}</div>
+      <div class="hazard-fix"><strong>Recommended Fix:</strong> ${escapeHtml(h.suggested_fix)}</div>
+    `;
+    list.appendChild(item);
+  });
+
+  // Scroll to results
+  document.getElementById('results-area').scrollIntoView({ behavior: 'smooth' });
+}
+
+// PDF EXPORT using jsPDF
+function exportPDF() {
+  if (!currentInspectionData) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  // Header banner
+  doc.setFillColor(15, 23, 42);
+  doc.rect(0, 0, 210, 35, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text('SiteSafeAgent: Jobsite Safety Audit Report', 14, 20);
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Generated: ${new Date().toLocaleString()} | OSHA 29 CFR 1926 Compliance`, 14, 28);
+
+  // Metadata block
+  doc.setTextColor(30, 41, 59);
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Audit Overview:', 14, 45);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text(`Jobsite: Hudson Yards Area 4B`, 14, 52);
+  doc.text(`Audit ID: ${currentInspectionData.inspection_id || 'INSP-2026-LIVE'}`, 14, 58);
+  doc.text(`Risk Score: ${currentInspectionData.overall_risk_score} / 100`, 120, 52);
+  doc.text(`Hazards Count: ${(currentInspectionData.hazards || []).length}`, 120, 58);
+
+  // Summary box
+  doc.setFillColor(248, 250, 252);
+  doc.rect(14, 64, 182, 22, 'F');
+  doc.setDrawColor(226, 232, 240);
+  doc.rect(14, 64, 182, 22, 'S');
+  doc.setFontSize(8.5);
+  doc.setTextColor(51, 65, 85);
+  const splitSummary = doc.splitTextToSize(currentInspectionData.summary || currentInspectionData.overall_assessment || 'No summary available.', 176);
+  doc.text(splitSummary, 17, 71);
+
+  // Hazards Table
+  const tableData = (currentInspectionData.hazards || []).map(h => [
+    h.title,
+    h.severity,
+    h.osha_rule || '29 CFR 1926',
+    h.suggested_fix
+  ]);
+
+  doc.autoTable({
+    startY: 92,
+    head: [['Hazard Title', 'Severity', 'OSHA Rule', 'Corrective Action Required']],
+    body: tableData,
+    headStyles: { fillColor: [234, 88, 12] },
+    theme: 'grid',
+    styles: { fontSize: 8.5, cellPadding: 3 },
+    columnStyles: {
+      0: { cellWidth: 45 },
+      1: { cellWidth: 22 },
+      2: { cellWidth: 38 },
+      3: { cellWidth: 75 }
+    }
+  });
+
+  // Footer / Sign-off
+  const finalY = doc.lastAutoTable.finalY + 20;
+  if (finalY < 270) {
+    doc.line(14, finalY, 80, finalY);
+    doc.text('Authorized Safety Inspector Signature', 14, finalY + 6);
+
+    doc.line(130, finalY, 196, finalY);
+    doc.text('Date & Site Compliance Verification', 130, finalY + 6);
+  }
+
+  doc.save(`SiteSafeAgent_Report_${Date.now()}.pdf`);
+}
+
+// ---------------------------------------------------------------------------
+// 2. LIVE HAZARD SPOTTER LOGIC
+// ---------------------------------------------------------------------------
+function initLiveWebSocket() {
+  if (websocket && websocket.readyState === WebSocket.OPEN) return;
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  websocket = new WebSocket(`${protocol}//${window.location.host}/ws/live`);
+
+  websocket.onopen = () => {
+    document.getElementById('live-status-pill').textContent = 'AI Connected';
+    document.getElementById('live-status-pill').style.background = 'rgba(16,185,129,0.8)';
+  };
+
+  websocket.onmessage = evt => {
+    const data = JSON.parse(evt.data);
+    if (data.type === 'answer') {
+      document.getElementById('speech-hud-text').textContent = data.text;
+      speakResponse(data.speech || data.text);
+    }
+  };
+
+  websocket.onclose = () => {
+    document.getElementById('live-status-pill').textContent = 'Disconnected';
+  };
+}
+
+async function toggleCamera() {
+  const video = document.getElementById('live-video');
+  const canvas = document.getElementById('live-canvas');
+  const btn = document.getElementById('cam-toggle-btn');
+
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+    video.style.display = 'none';
+    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">videocam</span> Start Camera';
+    return;
+  }
+
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' },
+      audio: false
+    });
+    video.srcObject = cameraStream;
+    video.style.display = 'block';
+    canvas.style.display = 'none';
+    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">videocam_off</span> Stop Camera';
+
+    // Start frame transmission loop
+    startFrameStreaming(video);
+  } catch (err) {
+    console.warn('Real camera not available, falling back to simulated stream:', err);
+    simulateLiveFeed();
+  }
+}
+
+function simulateLiveFeed() {
+  const canvas = document.getElementById('live-canvas');
+  const video = document.getElementById('live-video');
+  video.style.display = 'none';
+  canvas.style.display = 'block';
+  const ctx = canvas.getContext('2d');
+  canvas.width = 640;
+  canvas.height = 360;
+
+  const img = new Image();
+  img.src = '/demo/unsecured_ladder.jpg';
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, 640, 360);
+    // Draw scanning HUD
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(180, 80, 240, 220);
+    ctx.fillStyle = '#ef4444';
+    ctx.font = '14px sans-serif';
+    ctx.fillText('TARGET: EXTENSION LADDER', 185, 70);
+
+    sendCurrentFrame(canvas);
+  };
+
+  document.getElementById('live-status-pill').textContent = 'Simulated Feed Active';
+  document.getElementById('live-status-pill').style.background = 'rgba(245,158,11,0.8)';
+}
+
+function startFrameStreaming(video) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  setInterval(() => {
+    if (!cameraStream) return;
+    canvas.width = 640;
+    canvas.height = 360;
+    ctx.drawImage(video, 0, 0, 640, 360);
+    sendCurrentFrame(canvas);
+  }, 1500);
+}
+
+function sendCurrentFrame(canvas) {
+  if (!websocket || websocket.readyState !== WebSocket.OPEN) return;
+  const b64 = canvas.toDataURL('image/jpeg', 0.7);
+  websocket.send(JSON.stringify({ type: 'frame', image: b64 }));
+}
+
+function triggerVoiceAsk() {
+  const micBtn = document.getElementById('mic-btn');
+  micBtn.classList.add('listening');
+  document.getElementById('mic-label').textContent = 'Listening...';
+
+  // Use SpeechRecognition if available
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SpeechRecognition) {
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.onresult = event => {
+      const transcript = event.results[0][0].transcript;
+      askLiveCustom(transcript);
+    };
+    recognition.onend = () => {
+      micBtn.classList.remove('listening');
+      document.getElementById('mic-label').textContent = 'Ask "Is this safe?"';
+    };
+    recognition.start();
+  } else {
+    // Immediate fallback default prompt
+    setTimeout(() => {
+      askLiveCustom("Is this safe? Check the ladder and fall protection.");
+      micBtn.classList.remove('listening');
+      document.getElementById('mic-label').textContent = 'Ask "Is this safe?"';
+    }, 600);
+  }
+}
+
+function askLiveCustom(question) {
+  if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+    initLiveWebSocket();
+  }
+  document.getElementById('speech-hud-text').textContent = `Analyzing: "${question}"...`;
+  setTimeout(() => {
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+      websocket.send(JSON.stringify({ type: 'query', text: question }));
+    }
+  }, 300);
+}
+
+function speakResponse(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 1.05;
+  utterance.pitch = 1.0;
+  window.speechSynthesis.speak(utterance);
+}
+
+// ---------------------------------------------------------------------------
+// 3. OSHA COPILOT (A2UI) CHAT
+// ---------------------------------------------------------------------------
+const log = document.getElementById("log");
+const chatInput = document.getElementById("chat-input");
+
+function sendChatPrompt(prompt) {
+  chatInput.value = prompt;
+  handleChatSubmit(new Event('submit'));
+}
+
+async function handleChatSubmit(e) {
+  if (e) e.preventDefault();
+  const text = chatInput.value.trim();
+  if (!text) return;
+  chatInput.value = "";
+
+  addBubble("user", text);
+  const botBubble = addBubble("bot", "Thinking...");
+
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text, userId: "user-sitesafe" })
+    });
+    const data = await res.json();
+    botBubble.remove();
+    renderChatReply(data.parts || []);
+  } catch (err) {
+    botBubble.textContent = "Error communicating with agent: " + err.message;
+  }
+}
+
+function addBubble(who, text) {
+  const m = document.createElement("div");
+  m.className = "msg " + who;
+  const b = document.createElement("div");
+  b.className = "bubble";
+  b.textContent = text;
+  m.appendChild(b);
+  log.appendChild(m);
+  log.scrollTop = log.scrollHeight;
+  return b;
+}
+
+function renderChatReply(parts) {
+  for (const part of parts) {
+    if (part.kind === "text") {
+      addBubble("bot", part.text);
+    } else if (part.kind === "a2ui") {
+      renderA2UIMessage(part.data);
+    }
+  }
+}
+
+// A2UI Renderer
+function renderA2UIMessage(data) {
+  if (!data) return;
+  // Unwrap surfaceUpdate or components
+  const surface = data.surfaceUpdate || data;
+  const components = surface.components;
+  if (!components) {
+    addBubble("bot", JSON.stringify(data));
+    return;
+  }
+
+  const container = document.createElement("div");
+  container.className = "msg bot";
+  const richBubble = document.createElement("div");
+  richBubble.className = "bubble rich";
+  container.appendChild(richBubble);
+  log.appendChild(container);
+
+  // Map components
+  const compMap = {};
+  if (Array.isArray(components)) {
+    components.forEach(c => { compMap[c.id] = c.component; });
+  } else if (typeof components === 'object') {
+    Object.assign(compMap, components);
+  }
+
+  // Find root
+  const rootId = (data.beginRendering && data.beginRendering.root) || Object.keys(compMap)[0];
+  const renderedNode = buildA2UINode(rootId, compMap);
+  if (renderedNode) {
+    richBubble.appendChild(renderedNode);
+  } else {
+    richBubble.textContent = "Inspection data rendered.";
+  }
+  log.scrollTop = log.scrollHeight;
+}
+
+function buildA2UINode(id, compMap) {
+  const comp = compMap[id];
+  if (!comp) return null;
+  const type = Object.keys(comp)[0];
+  const props = comp[type];
+
+  if (type === "Card") {
+    const card = document.createElement("div");
+    card.className = "a2card";
+    if (props.child) {
+      const childNode = buildA2UINode(props.child, compMap);
+      if (childNode) card.appendChild(childNode);
+    }
+    return card;
+  }
+  if (type === "Column") {
+    const col = document.createElement("div");
+    col.className = "a2col";
+    const list = props.children && props.children.explicitList;
+    if (Array.isArray(list)) {
+      list.forEach(cid => {
+        const kid = buildA2UINode(cid, compMap);
+        if (kid) col.appendChild(kid);
+      });
+    }
+    return col;
+  }
+  if (type === "Text") {
+    const p = document.createElement("p");
+    p.className = `a2text a2-${props.usageHint || 'body'}`;
+    p.textContent = (props.text && props.text.literalString) || '';
+    return p;
+  }
+  if (type === "Image") {
+    const img = document.createElement("img");
+    img.className = "a2img";
+    img.src = (props.url && props.url.literalString) || '';
+    return img;
+  }
+  return null;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Add welcome message
+window.addEventListener('DOMContentLoaded', () => {
+  addBubble("bot", "Hello! I am SiteSafeAgent, your construction safety inspection agent. I can audit site photos, listen to live video queries, or consult OSHA 29 CFR 1926 standards. How can I assist you today?");
+});
+</script>
+</body>
+</html>
