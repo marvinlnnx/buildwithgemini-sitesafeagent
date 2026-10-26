@@ -2,6 +2,8 @@
 
 > **Build with Gemini: Track 3 (Build an Agent-First App)**
 > Built using Google Agent Development Kit (ADK), Gemini 2.5 Flash, Vertex AI, Firestore, Cloud Storage, and Agent-to-Agent (A2A) protocol with A2UI.
+>
+> 🌐 **Live Public App:** [https://sitesafeagent-543815073011.northamerica-northeast2.run.app](https://sitesafeagent-543815073011.northamerica-northeast2.run.app)
 
 ---
 
@@ -26,7 +28,7 @@ Safety hazards are easy to miss on busy, high-risk construction jobsites. **Site
 ### 3. 💬 OSHA Agent (A2UI) Mode
 - **Rich A2UI Card System**: Built on the Google A2UI v0.8 specification, displaying clean Cards, Columns, and visual layouts.
 - **OSHA Standards Library**: Live database queries against construction standards in Firestore.
-- **Risk Calculator Tool**: Computes site safety risk indices (0–100) and potential OSHA penalty exposure tiers.
+- **Risk Calculator Tool**: Computes site safety risk indices (0-100) and potential OSHA penalty exposure tiers.
 - **Live Weather Advisory**: Queries live meteorological conditions (wind speed, temperature) to alert on elevated scaffolding or crane wind hazards.
 - **Safety Sign Generator**: Uses `gemini-3.1-flash-lite-image` to generate jobsite safety signage and stores them in Cloud Storage.
 
